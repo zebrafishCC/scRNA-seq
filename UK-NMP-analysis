@@ -1,0 +1,68 @@
+library(Seurat)
+library(Matrix)
+setwd("/home/chengchen/data/nature2019/natureUK/atlas/")
+dir()
+
+matrix_dir = "/home/chengchen/data/nature2019/natureUK/atlas/"
+meta.path <- paste0(matrix_dir, "meta.csv")
+features.path <- paste0(matrix_dir, "genes.tsv")
+matrix.path <- paste0(matrix_dir, "raw_counts.mtx")
+mat <- readMM(file = matrix.path)
+
+meta = read.csv(meta.path)
+barcode.names = meta$cell
+
+#sizefactors = read.delim(sizefactors.path,
+#                         header = FALSE,
+#                         stringsAsFactors = FALSE)
+
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+
+colnames(mat) = barcode.names
+rownames(mat) = feature.names$V2
+mat1 = mat[,130406:135320]
+embryoUK = CreateSeuratObject(counts = mat1, project = "embryoUK", min.cells = 1000, min.features = 1000)
+
+
+#mitochondrial filter
+embryoUK[["percent.mt"]] <- PercentageFeatureSet(embryoUK, pattern = "^MT-")
+#pdf("quality_checks.pdf")
+VlnPlot(embryoUK,features = c("nFeature_RNA","nCount_RNA","percent.mt"), ncol =3)
+#dev.off()
+
+#plot2 <- FeatureScatter(embryoUK, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+embryoUK <- NormalizeData(embryoUK, normalization.method = "LogNormalize", scale.factor = 10000)
+
+#find variable genes
+embryoUK <- FindVariableFeatures(embryoUK, selection.method = "vst", nfeatures = 2000)
+
+#scale the data
+all.genes <- rownames(embryoUK)
+embryoUK <- ScaleData(embryoUK, features = all.genes)
+
+#PCA analysis
+embryoUK <- RunPCA(embryoUK, features = VariableFeatures(object = embryoUK))
+
+DimPlot(embryoUK, reduction = "pca")
+
+#cluster the cells
+
+embryoUK <- FindNeighbors(embryoUK, dims = 1:16)
+embryoUK <- FindClusters(embryoUK, resolution = 0.5)
+
+#dimension reduction with t-SNE
+embryoUK = RunTSNE(embryoUK, dims = 1:16)
+DimPlot(embryoUK, reduction = "tsne")
+
+#plot NMP cells on tsne
+FeaturePlot(embryoUK, features = c("T","Sox2"))
+
+#find markers for cluster6 nmp
+cluster6 = FindMarkers(embryoUK, ident.1 = 5)
+#write.csv(cluster6, "/home/chengchen/data/nature2019/natureUK/atlas.csv")
+
+
+#plot top 12 genes
+FeaturePlot(embryoUK, features = c("T","Epha5","Sox2","Evx1os","Evx1","Hoxc8","Hes7","Fgf8","Etv4","Cdx1","Hoxc8","Hoxaas3"))
