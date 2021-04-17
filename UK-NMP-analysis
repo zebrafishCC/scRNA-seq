@@ -66,3 +66,18 @@ cluster6 = FindMarkers(embryoUK, ident.1 = 5)
 
 #plot top 12 genes
 FeaturePlot(embryoUK, features = c("T","Epha5","Sox2","Evx1os","Evx1","Hoxc8","Hes7","Fgf8","Etv4","Cdx1","Hoxc8","Hoxaas3"))
+
+#be careful with the human genes and mouse genes
+#CE/NMP markers
+FeaturePlot(tls, features = c("Cdx2","Nkx1.2","Fgf8","T","Wnt3a","Sox2"))
+#candidates
+FeaturePlot(tls, features = c("Etv4","Epha5","Etv5"))
+
+#presomitic mesoderm markers
+FeaturePlot(tls, features = c("Tbx6","Msgn1","T"))
+
+#anterior presomitic mesoderm markers
+FeaturePlot(tls, features = c("Pax3","Msgn1","Uncx","Foxc2","Foxc1","Meox1","Meox2"))
+
+
+
